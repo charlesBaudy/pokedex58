@@ -1,61 +1,109 @@
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
-import PokemonCard from "../components/PokemonCard";
-import Titre from "../components/Titre";
+// Correction TP 4 : le Pokédex avec FlatList
+// Fichier : src/app/index.js
+// Les données viennent de src/data/pokemons.js (100 Pokémon : { number, name, type })
 
-const POKEMONS = [
-  { number: 1, name: "Bulbizarre", type: "Plante" },
-  { number: 4, name: "Salamèche", type: "Feu" },
-  { number: 7, name: "Carapuce", type: "Eau" },
-  { number: 25, name: "Pikachu", type: "Électrik" },
-  { number: 37, name: "Goupix", type: "Feu" },
-  { number: 43, name: "Mystherbe", type: "Plante" },
-];
+import { useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import PokemonCard from "../components/PokemonCard";
+import POKEMONS from "../data/pokemons";
 
 export default function Index() {
-  const [onlyFire, setOnlyFire] = useState(false);
+  // ===== Partie 2 : les captures sont remontées dans l'écran =====
+  // Un tableau de numéros : [25, 4, 7] = Pikachu, Salamèche et Carapuce capturés
+  const [captured, setCaptured] = useState([]);
+  // true = on n'affiche que les Pokémon capturés
+  const [capturesSeulement, setCapturesSeulement] = useState(false);
 
-  const displayed = onlyFire
-    ? POKEMONS.filter((p) => p.type === "Feu")
+  // Capturer ou relâcher un Pokémon (même principe que aimer(id) pour les posts)
+  function capturer(number) {
+    if (captured.includes(number)) {
+      // déjà capturé : on le retire du tableau
+      setCaptured(captured.filter((n) => n !== number));
+    } else {
+      // pas encore capturé : nouveau tableau = l'ancien + le nouveau numéro
+      setCaptured([...captured, number]);
+    }
+  }
+
+  // La liste à afficher : tous les Pokémon, ou seulement les capturés
+  const visibles = capturesSeulement
+    ? POKEMONS.filter((p) => captured.includes(p.number))
     : POKEMONS;
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollView}>
-      <Titre texte="Mon Pokédex" />
-      <Text>{displayed.length} Pokémon</Text>
-
-      <Pressable
-        onPress={() => setOnlyFire(!onlyFire)}
-        style={[styles.filterButton, onlyFire && styles.filterButtonActive]}
-      >
-        <Text style={[styles.filterText, onlyFire && styles.filterTextActive]}>
-          {onlyFire ? "Afficher tous les Pokémon" : "Afficher seulement le type Feu"}
-        </Text>
-      </Pressable>
-
-
-      {displayed.map((p) => (
+    // ===== Partie 1 : la FlatList en grille =====
+    <FlatList
+      data={visibles}
+      keyExtractor={(item) => String(item.number)} // la key doit être un texte
+      numColumns={2} // 2 cartes par ligne
+      columnWrapperStyle={styles.ligne} // le style de chaque ligne
+      contentContainerStyle={styles.liste}
+      extraData={captured} // redessine la liste quand les captures changent
+      ListHeaderComponent={
+        <View style={styles.entete}>
+          <Text style={styles.titre}>Pokédex</Text>
+          <Text style={styles.compteur}>{captured.length} capturés</Text>
+          <Pressable
+            style={styles.bouton}
+            onPress={() => setCapturesSeulement(!capturesSeulement)}
+          >
+            <Text style={styles.boutonTexte}>
+              {capturesSeulement ? "Voir tout" : "Mes captures"}
+            </Text>
+          </Pressable>
+        </View>
+      }
+      ListEmptyComponent={
+        <Text style={styles.vide}>Aucun Pokémon capturé pour l'instant.</Text>
+      }
+      renderItem={({ item }) => (
+        // Parenthèses après la flèche : on renvoie directement le JSX
         <PokemonCard
-          key={p.number}
-          number={p.number}
-          name={p.name}
-          type={p.type}
+          number={item.number}
+          name={item.name}
+          type={item.type}
+          captured={captured.includes(item.number)} // true ou false
+          onCapture={() => capturer(item.number)} // la carte prévient l'écran
         />
-      ))}
-    </ScrollView>
+      )}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    padding: 16, gap: 12
+  liste: {
+    padding: 12,
+    backgroundColor: "#F2F2F7",
   },
-  filterButton: {
+  ligne: {
+    gap: 12,
+  },
+  entete: {
+    marginBottom: 12,
+    gap: 8,
+  },
+  titre: {
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+  compteur: {
+    fontSize: 16,
+    color: "#666",
+  },
+  bouton: {
     alignSelf: "flex-start",
-    backgroundColor: "#ECE8DE",
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10
+    backgroundColor: "#3B5BDB",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
-  filterButtonActive: { backgroundColor: "#F08030" },
-  filterText: { fontWeight: "bold", color: "#333333" },
-  filterTextActive: { color: "#FFFFFF" },
+  boutonTexte: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  vide: {
+    textAlign: "center",
+    color: "#666",
+    marginTop: 40,
+  },
 });

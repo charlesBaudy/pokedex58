@@ -1,60 +1,73 @@
-import { useState } from "react";
+// Correction TP 4 : la carte d'un Pokémon
+// Fichier : src/components/PokemonCard.js
+// La carte n'a plus de state : elle reçoit captured et onCapture en props
+
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 const ARTWORK =
-    "https://raw.githubusercontent.com/PokeAPI/sprites" +
-    "/master/sprites/pokemon/other/official-artwork/";
+  "https://raw.githubusercontent.com/PokeAPI/sprites" +
+  "/master/sprites/pokemon/other/official-artwork/";
 
-const TYPE_COLORS = {
-    Plante: "#78C850",
-    Feu: "#F08030",
-    Eau: "#6890F0",
-    Électrik: "#F8D030",
-};
-    
-export default function PokemonCard({ number, name, type }) {
-    const color = TYPE_COLORS[type];
-    const [captured, setCaptured] = useState(false);
-    return (
-        <View style={[styles.card, { backgroundColor: color }]}>
-            <Image source={{ uri: `${ARTWORK}${number}.png` }} style={styles.image} />
-            <View>
-                <Text style={styles.number}>#{number}</Text>
-                <Text style={styles.name}>{name}</Text>
-                <Text style={styles.type}>{type}</Text>
-            </View>
-            <Pressable
-                onPress={() => setCaptured(!captured)}
-                style={[styles.button, captured && styles.buttonCaptured]}
-            >
-                <Text style={[styles.buttonText, captured && styles.buttonTextCaptured]}>
-                    {captured ? "Captured" : "Capture"}
-                </Text>
-            </Pressable>
-        </View>
-    );
+export default function PokemonCard({ number, name, type, captured, onCapture }) {
+  return (
+    // Le style change si le Pokémon est capturé
+    <View style={[styles.carte, captured && styles.carteCapturee]}>
+      <Image source={{ uri: `${ARTWORK}${number}.png` }} style={styles.image} />
+      <Text style={styles.numero}>#{number}</Text>
+      <Text style={styles.nom}>{name}</Text>
+      <Text style={styles.type}>{type}</Text>
 
+      {/* Au clic, on appelle la fonction reçue : c'est l'écran qui modifie le state */}
+      <Pressable style={styles.bouton} onPress={onCapture}>
+        <Text style={styles.boutonTexte}>
+          {captured ? "Relâcher" : "Capturer"}
+        </Text>
+      </Pressable>
+    </View>
+  );
 }
 
-
 const styles = StyleSheet.create({
-    card: {
-        flexDirection: "row", alignItems: "center", gap: 12,
-        padding: 12, borderRadius: 14
-    },
-    image: { width: 80, height: 80 },
-    number: { color: "#888888" },
-    name: { fontSize: 18, fontWeight: "bold" },
-    type: {
-        alignSelf: "flex-start", backgroundColor: "#ECE8DE",
-        paddingHorizontal: 10, borderRadius: 10, overflow: "hidden"
-    },
-    button: {
-        backgroundColor: "#ECE8DE",
-        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10
-    },
-    buttonCaptured: { backgroundColor: "#2563EB" },
-    buttonText: { fontWeight: "bold", color: "#333333" },
-    buttonTextCaptured: { color: "#FFFFFF" },
-
+  carte: {
+    flex: 1, // les 2 cartes d'une ligne se partagent la largeur
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  carteCapturee: {
+    borderColor: "#F59F00",
+    backgroundColor: "#FFF9DB",
+  },
+  image: {
+    width: 100,
+    height: 100,
+  },
+  numero: {
+    color: "#999",
+    fontSize: 13,
+  },
+  nom: {
+    fontSize: 17,
+    fontWeight: "bold",
+  },
+  type: {
+    fontSize: 13,
+    color: "#666",
+    marginBottom: 8,
+  },
+  bouton: {
+    backgroundColor: "#E03131",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+  },
+  boutonTexte: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
 });
